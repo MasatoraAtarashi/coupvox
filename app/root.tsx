@@ -15,7 +15,8 @@ export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap",
+    // Roboto 500 は Google のボタンのガイドライン指定（Google Sans が無い環境の代替）
+    href: "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Roboto:wght@500&display=swap",
   },
 ];
 
