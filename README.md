@@ -95,7 +95,8 @@ app/components/           shell.tsx（枠・ヘッダ・タブ・ボタン）cha
 
 GitHub Actions で自動デプロイする場合:
 
-1. Cloudflare ダッシュボードで API トークンを作成（権限: **Workers Scripts: Edit**、対象アカウントを絞る）
+1. Cloudflare ダッシュボードで API トークンを作成（権限: **Workers Scripts: Edit** と **D1: Edit**、対象アカウントを絞る）
+   - `deploy.yml` はデプロイ前に `d1 migrations apply --remote` を流すので D1 の権限が要る
 2. secrets を登録:
 
    ```bash

@@ -40,6 +40,15 @@ jobs:
 
       # 認証は API トークン方式（Cloudflare は wrangler デプロイ用 OIDC を未提供、2026-08 時点）。
       # トークンは Workers Scripts 編集の最小権限にすること。
+      # wrangler-action は package.json の predeploy を経由しないため、
+      # マイグレーションはここで明示的に流す。スキーマを先に合わせてから配信する。
+      - name: Apply D1 migrations
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote
+
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
