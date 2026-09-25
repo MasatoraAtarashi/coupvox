@@ -4,6 +4,7 @@ import { Legend, TrendChart, VennHero } from "../components/charts";
 import { AppShell, Card, Header, PrimaryButton, Tabs } from "../components/shell";
 import { loadView } from "../../server/lib/dashboard";
 import { memberFromRequest } from "../../server/auth/member";
+import { SECTION_TITLES } from "../../server/lib/advice";
 import type { Route } from "./+types/result";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -21,6 +22,7 @@ export default function Result() {
   const revalidator = useRevalidator();
   const [metric, setMetric] = useState<"R" | "I">("R");
   const [adviceLoading, setAdviceLoading] = useState(false);
+  const [adviceError, setAdviceError] = useState<string | null>(null);
 
   if (!loaded.authorized) {
     return (
@@ -43,12 +45,21 @@ export default function Result() {
   async function refreshAdvice() {
     setAdviceLoading(true);
     try {
-      await fetch("/api/cycles/advice", { method: "POST" });
+      const res = await fetch("/api/cycles/advice", { method: "POST" });
+      setAdviceError(
+        res.ok ? null : "いまはつくれませんでした。回答を送ってから、もう一度おしてください。",
+      );
+    } catch {
+      setAdviceError("通信できませんでした。少し待ってからもう一度おしてください。");
     } finally {
       setAdviceLoading(false);
       revalidator.revalidate();
     }
   }
+
+  // 旧ペイロード（mode / sections を持たない）は paired 扱いで読む
+  const adviceMode = view.advice?.mode ?? "paired";
+  const adviceSections = view.advice?.sections ?? [];
 
   const pill = (on: boolean) =>
     on ? "bg-[var(--color-ink)] text-white" : "bg-[var(--color-track)] text-[#6B6057]";
@@ -167,12 +178,12 @@ export default function Result() {
           </div>
         )}
 
-        {/* e. AI提案 */}
-        {view.complete && (
+        {/* e. AI分析。相手を待たず、自分が答えた時点で開く */}
+        {view.meDone && (
           <section className="mt-[26px] rounded-[28px] bg-[var(--color-amber-card)] p-6">
             <div className="flex items-center justify-between">
               <div className="text-[13px] font-medium text-[var(--color-amber-label)]">
-                AIからの提案
+                {adviceMode === "solo" ? "いまのあなたへ" : "AIからの分析"}
               </div>
               <button
                 type="button"
@@ -188,10 +199,24 @@ export default function Result() {
                 <p className="mt-3.5 text-[15px] leading-[1.9] font-medium text-[var(--color-amber-ink)] text-pretty">
                   {view.advice.lead}
                 </p>
+                {adviceSections.length > 0 && (
+                  <div className="mt-4 grid gap-2.5">
+                    {adviceSections.map((section) => (
+                      <div key={section.key} className="rounded-[18px] bg-white/60 px-[18px] py-4">
+                        <div className="text-[12px] font-medium text-[var(--color-amber-label)]">
+                          {SECTION_TITLES[adviceMode][section.key]}
+                        </div>
+                        <p className="mt-1.5 text-[14px] leading-[1.85] text-[var(--color-amber-ink)] text-pretty">
+                          {section.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-4 grid gap-2.5">
-                  {view.advice.lines.map((line) => (
+                  {view.advice.lines.map((line, index) => (
                     <div
-                      key={line}
+                      key={`${index}-${line.slice(0, 12)}`}
                       className="rounded-[18px] bg-white px-[18px] py-4 text-[14px] leading-[1.85] text-[var(--color-amber-ink)] text-pretty"
                     >
                       {line}
@@ -201,7 +226,18 @@ export default function Result() {
               </>
             ) : (
               <p className="mt-3.5 text-[14px] leading-[1.9] text-[var(--color-amber-ink)]">
-                「更新する」をおすと、今回の結果から提案をつくります。
+                「更新する」をおすと、今回の結果から分析をつくります。
+              </p>
+            )}
+            {adviceError && (
+              <p className="mt-3 text-[13px] leading-[1.85] text-[var(--color-amber-label)]">
+                {adviceError}
+              </p>
+            )}
+            {adviceMode === "solo" && (
+              <p className="mt-3 text-[12px] leading-[1.9] text-[var(--color-amber-label)]">
+                {view.partnerName}
+                さんが回答すると、相手からの見え方をもとにした分析に切り替わります。
               </p>
             )}
           </section>

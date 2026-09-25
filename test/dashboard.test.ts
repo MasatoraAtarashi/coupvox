@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
 import { loadView } from "../server/lib/dashboard";
 import { findMemberByGoogleSub } from "../server/auth/member";
+import { generateCycleInsights, getCouple, getLatestCycle, getMembers } from "../server/lib/cycles";
 import { setupCouple, splitAnswers, submit, uniformAnswers } from "./helpers";
 
 async function viewFor(sub: string) {
@@ -86,5 +87,99 @@ describe("組の分離", () => {
     expect(mine.trend).toHaveLength(1);
     // ふたりとも参加済みなので、配る招待リンクはもう無い
     expect(mine.partnerLink).toBeNull();
+  });
+});
+
+/** ai.run が受け取った user メッセージを覚えておく偽 AI */
+function recordingAi(response: unknown) {
+  const prompts: string[] = [];
+  const ai = {
+    run: async (_model: string, options: { messages: { role: string; content: string }[] }) => {
+      prompts.push(options.messages.find((m) => m.role === "user")?.content ?? "");
+      return { response };
+    },
+  } as unknown as Ai;
+  return { ai, prompts };
+}
+
+const AI_RESPONSE = {
+  lead: "受けとめる文",
+  sections: [{ key: "gap", body: "説明" }],
+  actions: ["行動"],
+};
+
+async function generateFor(sub: string, ai: Ai) {
+  const db = createDb(env.DB);
+  const member = await findMemberByGoogleSub(db, sub);
+  if (!member) throw new Error("member not found");
+  const couple = await getCouple(db, member.coupleId);
+  const cycle = await getLatestCycle(db, member.coupleId);
+  if (!couple || !cycle) throw new Error("cycle not found");
+  const roster = await getMembers(db, member.coupleId);
+  return generateCycleInsights(db, ai, couple, cycle, roster);
+}
+
+describe("AI 分析の生成", () => {
+  it("片方だけの回答でも、回答した人には solo の分析が出る", async () => {
+    const { cycleId, subs } = await setupCouple();
+    await submit(subs.you, cycleId, splitAnswers(4, 1));
+
+    const { ai } = recordingAi(AI_RESPONSE);
+    expect(await generateFor(subs.you, ai)).toBe(true);
+
+    const mine = await viewFor(subs.you);
+    expect(mine.advice?.mode).toBe("solo");
+    expect(mine.advice?.sections).toHaveLength(1);
+    // 回答していない相手には出さない
+    expect((await viewFor(subs.partner)).advice).toBeNull();
+  });
+
+  it("solo のプロンプトに相手のデータが入らない", async () => {
+    const { cycleId, subs } = await setupCouple();
+    await submit(subs.you, cycleId, splitAnswers(4, 1), {
+      comment: "わたしのひとりごと",
+      shareComment: false,
+    });
+
+    const { ai, prompts } = recordingAi(AI_RESPONSE);
+    await generateFor(subs.you, ai);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).toContain("わたしのひとりごと");
+    expect(prompts[0]).not.toContain("はなこ");
+  });
+
+  it("ふたり揃うと paired に切り替わる", async () => {
+    const { cycleId, subs } = await setupCouple();
+    await submit(subs.you, cycleId, splitAnswers(4, 1));
+    await generateFor(subs.you, recordingAi(AI_RESPONSE).ai);
+    await submit(subs.partner, cycleId, splitAnswers(2, 3));
+
+    const { ai } = recordingAi(AI_RESPONSE);
+    await generateFor(subs.you, ai);
+    expect((await viewFor(subs.you)).advice?.mode).toBe("paired");
+    expect((await viewFor(subs.partner)).advice?.mode).toBe("paired");
+  });
+
+  it("共有されていないコメントは相手向けのプロンプトに入らない", async () => {
+    const { cycleId, subs } = await setupCouple();
+    await submit(subs.you, cycleId, splitAnswers(4, 1), {
+      comment: "これは秘密のコメント",
+      shareComment: false,
+    });
+    await submit(subs.partner, cycleId, splitAnswers(2, 3), {
+      comment: "これは共有するコメント",
+      shareComment: true,
+    });
+
+    const { ai, prompts } = recordingAi(AI_RESPONSE);
+    await generateFor(subs.you, ai);
+    // 2 人分のプロンプトのどこにも、共有されていないコメントは現れない
+    expect(prompts.some((prompt) => prompt.includes("これは共有するコメント"))).toBe(true);
+    expect(prompts.some((prompt) => prompt.includes("これは秘密のコメント"))).toBe(false);
+  });
+
+  it("誰も回答していなければ生成しない", async () => {
+    const { subs } = await setupCouple();
+    expect(await generateFor(subs.you, recordingAi(AI_RESPONSE).ai)).toBe(false);
   });
 });
