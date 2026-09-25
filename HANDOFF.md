@@ -19,8 +19,9 @@
 - ローカルで一周動作確認済み: セットアップ → 個人リンク → 16問 → コメント（共有チェック）→ 結果画面（スコア 68/70、ずれ 2、相手が低くつけた項目、コメント両方開放、AI 提案生成）
 - `pnpm exec tsc -b` 通過
 - `pnpm test` 21 passed / 4 files（AI 提案のプロンプト調整後に再実行済み）
-- 初回コミット済み（ブランチ main）。リモートへの push は未実施
-- 未デプロイ。`wrangler.jsonc` の D1 database_id はプレースホルダのまま
+- main を push 済み。CI（PR Checks / Deploy）ともに green
+- デプロイ済み: https://coupvox.kaito-technology.workers.dev
+- D1 `coupvox-db`（APAC / `d3510429-0f80-4374-bc35-2582fbb5449c`）。リモートのマイグレーション適用済み
 
 ## 技術構成
 
@@ -81,20 +82,29 @@ pnpm dev                          # http://localhost:5173
 - トークンを直接見るなら: `pnpm exec wrangler d1 execute DB --local --command "SELECT name, token FROM members;"`
 - 検証: `pnpm exec tsc -b` と `pnpm test`
 
-## デプロイ時にやること
+## デプロイ
 
-1. `wrangler d1 create coupvox-db` して `wrangler.jsonc` の `database_id` を差し替える
-2. `wrangler d1 migrations apply DB --remote`
-3. `wrangler secret put TYPESAFE_API_KEY`（使う場合のみ。対話入力で。CLI 引数に値を書かない）
-4. `wrangler.jsonc` の `vars.APP_URL` を本番 URL にする。個人リンクの生成に使う
+初回セットアップは完了済み。main に push すれば `deploy.yml` が
+マイグレーション適用 → デプロイまで流す。
+
+- GitHub secrets: `CLOUDFLARE_API_TOKEN`（**Workers Scripts: Edit と D1: Edit の両方が要る**）/ `CLOUDFLARE_ACCOUNT_ID`
+- `wrangler-action` は `command` をそのまま実行し `package.json` の `predeploy` を
+  経由しない。マイグレーションは `deploy.yml` の専用ステップで流している
+- `TYPESAFE_API_KEY` を使う場合のみ `wrangler secret put TYPESAFE_API_KEY`（対話入力で）
 
 ## 残っていること
 
-- [ ] リモートリポジトリへ push する
+- [ ] 本番で一周の動作確認（`/setup` から組を作って16問まで）。ローカルでしか通していない
+- [ ] Dependabot が開いている PR（vite / react / wrangler ほか）の取り込み
 - [ ] R4〜R8 / I4〜I8 の文言は暫定。R1〜R3・I1〜I3 は支給された正式な文言なので変えない（`test/scoring.test.ts` が固定している）
 - [ ] 複数サイクルにまたがる推移グラフは、実データが1回分しかないので未検証
 
 ## 直近で直したこと
+
+- `deploy.yml` がマイグレーションを流しておらず、デプロイは success なのに
+  リモート D1 のテーブルが `_cf_KV` だけだった。専用ステップを足した
+- `pnpm audit` が high 6 / moderate 6 で CI を落としていた。hono を 4.13.9 に
+  上げ（本番依存で唯一の該当）、推移的依存は `pnpm.overrides` で固定した
 
 - Workers AI の `response` が文字列ではなくオブジェクトで返ることがあり、`raw.replace is not a function` で必ず FALLBACK に落ちていた。`parseAdvice(raw: unknown)` で両方受けるようにした（`server/lib/advice.ts`）
 - 提案が長文・尺度名まじりになっていたので、プロンプトに文字数（40〜80字）と「です・ます」「尺度名を書かない」を足した
