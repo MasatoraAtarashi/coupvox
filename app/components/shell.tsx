@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { isExternalHref } from "../lib/href";
 
 /** アプリ幅 460px の外側はページ地色。全画面共通の外枠 */
 export function AppShell({
@@ -90,6 +91,13 @@ export function PrimaryButton({
   const className =
     "block w-full rounded-full bg-[var(--color-coral-deep)] py-[18px] text-center text-[16px] font-bold text-white transition-colors hover:bg-[var(--color-coral-hover)] disabled:opacity-60";
   if (href) {
+    if (isExternalHref(href)) {
+      return (
+        <a href={href} className={className} style={{ boxShadow: PRIMARY_SHADOW }}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link to={href} className={className} style={{ boxShadow: PRIMARY_SHADOW }}>
         {children}
@@ -121,6 +129,13 @@ export function SecondaryButton({
   const className =
     "block w-full rounded-full bg-[var(--color-panel)] py-[15px] text-center text-[15px] font-medium text-[var(--color-ink-muted)] transition-colors hover:bg-[#EFE6DC]";
   if (href) {
+    if (isExternalHref(href)) {
+      return (
+        <a href={href} className={className}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link to={href} className={className}>
         {children}

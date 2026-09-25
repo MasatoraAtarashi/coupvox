@@ -1,5 +1,7 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import { AppShell, Card, Header, PrimaryButton, SecondaryButton, Tabs } from "../components/shell";
+import { GoogleSignInButton } from "../components/google-sign-in";
+import { loginErrorMessage } from "../lib/login-error";
 import { loadView } from "../../server/lib/dashboard";
 import { memberFromRequest } from "../../server/auth/member";
 import { readSessionFromRequest } from "../../server/auth/session";
@@ -166,6 +168,8 @@ function LastScore({
 }
 
 function Landing({ signedIn }: { signedIn: boolean }) {
+  const [params] = useSearchParams();
+  const loginError = loginErrorMessage(params.get("error"));
   return (
     <AppShell>
       <Header />
@@ -191,7 +195,12 @@ function Landing({ signedIn }: { signedIn: boolean }) {
             </>
           ) : (
             <div className="mt-5">
-              <PrimaryButton href="/api/auth/google?next=%2Fsetup">Google ではじめる</PrimaryButton>
+              {loginError && (
+                <p className="mb-3 rounded-2xl bg-[var(--color-panel)] px-4 py-3 text-[13px] leading-[1.8] text-[var(--color-ink-sub)]">
+                  {loginError}
+                </p>
+              )}
+              <GoogleSignInButton next="/setup" />
             </div>
           )}
         </Card>
