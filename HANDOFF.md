@@ -93,17 +93,31 @@ pnpm dev                          # http://localhost:5173
 - `wrangler-action` は `command` をそのまま実行し `package.json` の `predeploy` を
   経由しない。マイグレーションは `deploy.yml` の専用ステップで流している
 - `TYPESAFE_API_KEY` を使う場合のみ `wrangler secret put TYPESAFE_API_KEY`（対話入力で）
+- Worker secrets（投入済み）: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `SESSION_SECRET`。
+  **`SESSION_SECRET` が無いと本番は cookie を張らず、誰もログインできない**。
+  中身はランダムでよく、人が覚える必要はない。入れ替えると全員ログアウトになるので、
+  漏れたときの止め方としても使える
+- 最新版がデプロイ済みでないと `wrangler secret put` は
+  「latest version isn't deployed」で失敗する。その場合は
+  `wrangler versions secret put <NAME>` で新バージョンを作り
+  `wrangler versions deploy <id>@100` で出す
 
 ## 残っていること
 
 - [ ] **既存の2人が、手元の招待リンクで claim できるか本番で確認する**（未 claim のまま残っている）
 - [ ] 本番で一周の動作確認（`/setup` から組を作って16問まで）。ローカルでしか通していない
-- [ ] Dependabot が開いている PR（vite / react / wrangler ほか）の取り込み
+- [ ] Dependabot が開いている PR（vite / @types/node / commitlint ほか）の取り込み。
+      いずれも devDependencies と Actions の更新で、本番依存は含まれない
 - [ ] R4〜R8 / I4〜I8 の文言は暫定。R1〜R3・I1〜I3 は支給された正式な文言なので変えない（`test/scoring.test.ts` が固定している）
 - [ ] 複数サイクルにまたがる推移グラフは、実データが1回分しかないので未検証
 
 ## 直近で直したこと
 
+- Dependabot の PR がすべて preview ジョブで落ちていた。Dependabot の PR は
+  通常の repository secrets を読めず Dependabot secrets を参照するため、
+  Cloudflare の認証情報が空になる。fork と同じ扱いでスキップするようにした
+- `detect-secrets` が「SECRET という語への代入」に反応して ASH が落ちていた。
+  4 件とも値は秘密ではないことを1件ずつ確認し、`.ash.yml` に理由つきで抑制を書いた
 - `deploy.yml` がマイグレーションを流しておらず、デプロイは success なのに
   リモート D1 のテーブルが `_cf_KV` だけだった。専用ステップを足した
 - `pnpm audit` が high 6 / moderate 6 で CI を落としていた。hono を 4.13.9 に
