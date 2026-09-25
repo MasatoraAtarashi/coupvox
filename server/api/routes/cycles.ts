@@ -57,6 +57,6 @@ export const cyclesRoute = new Hono<AppEnv>()
 
     const roster = await getMembers(db, couple.id);
     const generated = await generateCycleInsights(db, c.env.AI, couple, cycle, roster);
-    if (!generated) return c.json({ error: "waiting_for_both" }, 409);
+    if (!generated) return c.json({ error: "no_responses" }, 409);
     return c.json({ ok: true, cycleId: cycle.id });
   });

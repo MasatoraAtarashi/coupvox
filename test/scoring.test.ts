@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { SURVEY_ITEMS } from "../server/survey/items";
-import { computeScores, lowestItems, perceptionGap } from "../server/survey/scoring";
+import {
+  computeScores,
+  itemDeltas,
+  itemGaps,
+  lowestItems,
+  perceptionGap,
+} from "../server/survey/scoring";
 import { splitAnswers, uniformAnswers } from "./helpers";
 
 describe("尺度の定義", () => {
@@ -59,5 +65,43 @@ describe("perceptionGap", () => {
   it("応答性の差を絶対値で返す", () => {
     expect(perceptionGap(80, 54)).toBe(26);
     expect(perceptionGap(54, 80)).toBe(26);
+  });
+});
+
+describe("itemGaps", () => {
+  it("同じ項目に対する二人の評定の差を大きい順に返す", () => {
+    const mine = uniformAnswers(5);
+    const theirs = uniformAnswers(5);
+    theirs.R1 = 1; // 差 4
+    theirs.R2 = 3; // 差 2
+    const gaps = itemGaps(mine, theirs);
+    expect(gaps.map((gap) => gap.id)).toEqual(["R1", "R2"]);
+    expect(gaps[0]).toMatchObject({ mine: 5, theirs: 1, diff: 4 });
+  });
+
+  it("差のない項目は返さない。件数上限を守る", () => {
+    expect(itemGaps(uniformAnswers(3), uniformAnswers(3))).toHaveLength(0);
+    expect(itemGaps(uniformAnswers(0), uniformAnswers(5), 2)).toHaveLength(2);
+  });
+
+  it("片方しか答えていない項目は比べない", () => {
+    expect(itemGaps({ R1: 5 }, { R2: 0 })).toHaveLength(0);
+  });
+});
+
+describe("itemDeltas", () => {
+  it("前回から2以上動いた項目だけを動きの大きい順に返す", () => {
+    const previous = uniformAnswers(3);
+    const current = uniformAnswers(3);
+    current.R1 = 0; // -3
+    current.R2 = 5; // +2
+    current.R3 = 4; // +1 は揺らぎとして捨てる
+    const deltas = itemDeltas(previous, current);
+    expect(deltas.map((delta) => delta.id)).toEqual(["R1", "R2"]);
+    expect(deltas[0]).toMatchObject({ from: 3, to: 0 });
+  });
+
+  it("前回が無いときは何も返さない", () => {
+    expect(itemDeltas({}, uniformAnswers(5))).toHaveLength(0);
   });
 });

@@ -11,7 +11,7 @@ import {
   type Cycle,
   type Member,
 } from "../../db/schema";
-import { computeScores, type Scores } from "../survey/scoring";
+import { computeScores, itemDeltas, itemGaps, lowestItems, type Scores } from "../survey/scoring";
 import { logger } from "../logger";
 import { generateAdvice, type Advice } from "./advice";
 import type { TriageResult } from "./triage";
@@ -271,9 +271,25 @@ export type TriageMap = Record<string, TriageResult>;
 /** AI 提案は閲覧者ごとに内容が変わるので、メンバー単位で保存する */
 export const adviceKind = (memberId: string) => `ai:${memberId}`;
 
+/** history から、あるメンバーの過去エントリだけを古い順に取り出す */
+function historyOf(
+  history: { entries: ResponseWithScores[] }[],
+  memberId: string,
+): ResponseWithScores[] {
+  return history
+    .map((loaded) => loaded.entries.find((entry) => entry.memberId === memberId))
+    .filter((entry): entry is ResponseWithScores => entry !== undefined);
+}
+
 /**
- * 二人とも回答済みなら、各自に向けた提案を生成して保存する。
- * 「パートナーが自分をどう感じているか」が入力なので、二人分それぞれ別の提案になる。
+ * 回答した人それぞれに向けた分析を生成して保存する。
+ *
+ * 相手も回答済みなら「パートナーが自分をどう感じているか」が入力になる（paired）。
+ * 自分しか回答していないなら、自分の回答だけを材料にする（solo）。solo に相手の
+ * データを混ぜないのは、「相手が未回答なら相手の結果は見せない」という公開ルールを
+ * AI の文章経由で破らないため。
+ *
+ * 戻り値は「1 件以上生成したか」。
  */
 export async function generateCycleInsights(
   db: Db,
@@ -283,7 +299,7 @@ export async function generateCycleInsights(
   roster: Member[],
 ): Promise<boolean> {
   const current = await loadCycleResponses(db, cycle.id, roster);
-  if (current.length < roster.length) return false;
+  if (current.length === 0) return false;
 
   const history = (await loadRecentCycles(db, couple.id, roster, 9))
     .filter((loaded) => loaded.cycle.id !== cycle.id && loaded.entries.length > 0)
@@ -291,27 +307,57 @@ export async function generateCycleInsights(
 
   const triage = ((await getInsight(db, cycle.id, "triage")) as TriageMap | undefined) ?? {};
 
+  let generated = 0;
   for (const member of roster) {
+    const myEntry = current.find((entry) => entry.memberId === member.id);
+    // 自分が答えていない人に「あなたの見え方」は出しようがない
+    if (!myEntry) continue;
     const partnerEntry = current.find((entry) => entry.memberId !== member.id);
-    if (!partnerEntry) continue;
 
-    const trend = history
-      .map((loaded) => loaded.entries.find((entry) => entry.memberId === partnerEntry.memberId))
-      .filter((entry): entry is ResponseWithScores => entry !== undefined);
+    const advice = partnerEntry
+      ? await generateAdvice(ai, {
+          mode: "paired",
+          partnerValues: partnerEntry.values,
+          partnerLowItems: lowestItems(partnerEntry.values),
+          partnerDeltas: itemDeltas(
+            historyOf(history, partnerEntry.memberId).at(-1)?.values ?? {},
+            partnerEntry.values,
+          ),
+          gapItems: itemGaps(myEntry.values, partnerEntry.values),
+          // 非共有コメントは提案の材料にしない（本人の画面と Jev 判定にのみ使う）
+          partnerComment: partnerEntry.shareComment ? partnerEntry.comment : null,
+          partnerTriage: partnerEntry.shareComment ? (triage[partnerEntry.memberId] ?? null) : null,
+          trendResponsive: [...historyOf(history, partnerEntry.memberId), partnerEntry].map(
+            (entry) => entry.scores.responsive,
+          ),
+          trendInsensitive: [...historyOf(history, partnerEntry.memberId), partnerEntry].map(
+            (entry) => entry.scores.insensitive,
+          ),
+        })
+      : await generateAdvice(ai, {
+          mode: "solo",
+          selfLowItems: lowestItems(myEntry.values),
+          selfDeltas: itemDeltas(
+            historyOf(history, myEntry.memberId).at(-1)?.values ?? {},
+            myEntry.values,
+          ),
+          // 自分のコメントは共有の可否に関係なく本人向けなので渡してよい
+          selfComment: myEntry.comment,
+          selfTriage: triage[myEntry.memberId] ?? null,
+          trendResponsive: [...historyOf(history, myEntry.memberId), myEntry].map(
+            (entry) => entry.scores.responsive,
+          ),
+          trendInsensitive: [...historyOf(history, myEntry.memberId), myEntry].map(
+            (entry) => entry.scores.insensitive,
+          ),
+        });
 
-    const advice = await generateAdvice(ai, {
-      partnerValues: partnerEntry.values,
-      // 非共有コメントは提案の材料にしない（本人の画面と Jev 判定にのみ使う）
-      partnerComment: partnerEntry.shareComment ? partnerEntry.comment : null,
-      partnerTriage: partnerEntry.shareComment ? (triage[partnerEntry.memberId] ?? null) : null,
-      trendResponsive: [...trend, partnerEntry].map((entry) => entry.scores.responsive),
-      trendInsensitive: [...trend, partnerEntry].map((entry) => entry.scores.insensitive),
-    });
     await putInsight(db, cycle.id, adviceKind(member.id), advice);
+    generated += 1;
   }
 
-  logger.info("cycle advice generated", { cycleId: cycle.id, members: roster.length });
-  return true;
+  logger.info("cycle advice generated", { cycleId: cycle.id, generated });
+  return generated > 0;
 }
 
 export type { Advice };
