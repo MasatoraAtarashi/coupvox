@@ -142,16 +142,21 @@ export interface PersonalLink {
 }
 
 /**
- * 個人リンク（= そのままログインになる URL）。
+ * 招待リンク（= 組に参加するための一度きりの参加券）。
  * メール配信は行わないので、作った人が LINE 等で相手に渡す前提。
+ *
+ * 参加済み（claimedAt が埋まっている）メンバーのリンクは返さない。
+ * そのリンクはもう使えないし、渡す相手もいないため。
  */
 export function personalLinks(roster: Member[], appUrl: string): PersonalLink[] {
   const base = appUrl.replace(/\/+$/, "");
-  return roster.map((member) => ({
-    memberId: member.id,
-    name: member.name,
-    url: `${base}/s/${member.token}`,
-  }));
+  return roster
+    .filter((member) => !member.claimedAt)
+    .map((member) => ({
+      memberId: member.id,
+      name: member.name,
+      url: `${base}/s/${member.token}`,
+    }));
 }
 
 export interface ResponseWithScores {

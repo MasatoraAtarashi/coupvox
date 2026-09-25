@@ -1,17 +1,21 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../env";
 import { errorHandler } from "../middleware/error-handler";
-import { memberAuth } from "../middleware/member-auth";
+import { memberAuth, requireSession } from "../middleware/member-auth";
 import { requestId } from "../middleware/request-id";
 import { getMembers } from "../lib/cycles";
 import { createDb } from "../../db/client";
 import { cyclesRoute } from "./routes/cycles";
 import { setupRoute } from "./routes/setup";
+import { authRoute } from "../auth/routes";
 import { surveyRoute } from "./routes/survey";
 
 export const api = new Hono<AppEnv>()
   .use("*", requestId)
-  // 初回セットアップだけは未認証で通す（二重初期化は setup 側で 409）
+  // ログイン自体は未認証で通す
+  .route("/auth", authRoute)
+  // 組を作るのはログイン済みなら誰でも。まだメンバーではないので memberAuth の外
+  .use("/setup", requireSession)
   .route("/setup", setupRoute)
   .use("*", memberAuth)
   .get("/me", async (c) => {

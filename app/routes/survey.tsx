@@ -5,7 +5,7 @@ import { createDb } from "../../db/client";
 import { responses } from "../../db/schema";
 import { AppShell, Card, PrimaryButton } from "../components/shell";
 import { getMembers, getOpenCycle, rangeLabel } from "../../server/lib/cycles";
-import { memberFromRequest } from "../../server/lib/session";
+import { memberFromRequest } from "../../server/auth/member";
 import { SCALE_LABELS, SCALE_TINTS, SURVEY_ITEMS } from "../../server/survey/items";
 import type { Route } from "./+types/survey";
 
@@ -13,7 +13,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const db = createDb(env.DB);
 
-  const me = await memberFromRequest(env.DB, request);
+  const me = await memberFromRequest(env, request);
   if (!me) throw redirect("/");
 
   const roster = await getMembers(db, me.coupleId);

@@ -3,12 +3,12 @@ import { useLoaderData, useRevalidator } from "react-router";
 import { Legend, TrendChart, VennHero } from "../components/charts";
 import { AppShell, Card, Header, PrimaryButton, Tabs } from "../components/shell";
 import { loadView } from "../../server/lib/dashboard";
-import { memberFromRequest } from "../../server/lib/session";
+import { memberFromRequest } from "../../server/auth/member";
 import type { Route } from "./+types/result";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
-  const me = await memberFromRequest(env.DB, request);
+  const me = await memberFromRequest(env, request);
   if (!me) return { authorized: false as const };
 
   const view = await loadView(env.DB, me, env.APP_URL ?? new URL(request.url).origin);

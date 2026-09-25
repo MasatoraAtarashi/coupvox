@@ -11,6 +11,10 @@
   "observability": {
     "enabled": false,
   },
+  "vars": {
+    // テスト専用の固定値。本番は wrangler secret で入れる
+    "SESSION_SECRET": "test-session-secret",
+  },
   "d1_databases": [
     {
       "binding": "DB",
