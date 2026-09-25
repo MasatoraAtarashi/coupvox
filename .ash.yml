@@ -32,3 +32,20 @@ global_settings:
       reason: rulesync が展開する外部スキルのため
     - path: migrations/meta/**
       reason: drizzle-kit が生成するマイグレーションメタデータ（JSON）のため
+
+  # detect-secrets の Secret Keyword は「SECRET という名前への代入」で反応する。
+  # 以下はいずれも実際の秘密ではないことを確認したうえで抑制している。
+  # 本番の値は wrangler secret（.dev.vars）にあり、リポジトリには入っていない。
+  suppressions:
+    - rule_id: "SECRET-SECRET-KEYWORD"
+      path: "server/auth/session.ts"
+      reason: localhost 専用の開発用フォールバック鍵。本番は SESSION_SECRET が無ければ null を返してログインさせない
+    - rule_id: "SECRET-SECRET-KEYWORD"
+      path: "wrangler.vitest.jsonc"
+      reason: vitest 専用の固定値。テスト以外からは読まれない
+    - rule_id: "SECRET-SECRET-KEYWORD"
+      path: "test/auth.test.ts"
+      reason: 署名の検証に使うテスト用の定数
+    - rule_id: "SECRET-SECRET-KEYWORD"
+      path: "HANDOFF.md"
+      reason: 必要な secret の「名前」を列挙している文章で、値は書かれていない
