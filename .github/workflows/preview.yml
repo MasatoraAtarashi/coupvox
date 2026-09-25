@@ -13,8 +13,12 @@ concurrency:
 
 jobs:
   preview:
-    # fork からの PR には secrets が渡らないためスキップ
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # secrets が渡らない PR はスキップする。fork はもちろん、Dependabot も
+    # 通常の repository secrets ではなく Dependabot secrets を参照するため、
+    # ここで弾かないと Cloudflare の認証が空のまま必ず失敗する
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
     name: Upload Worker version & comment preview URL
     runs-on: ubuntu-latest
     timeout-minutes: 20
