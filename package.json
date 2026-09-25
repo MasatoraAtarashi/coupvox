@@ -33,7 +33,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.15.3",
     "@cloudflare/vitest-pool-workers": "^0.21.2",
-    "@commitlint/cli": "^19.8.1",
+    "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^19.8.1",
     "@react-router/dev": "^7.9.6",
     "@tailwindcss/vite": "^4.1.17",
