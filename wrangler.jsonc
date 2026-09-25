@@ -18,7 +18,7 @@
       "binding": "DB",
       "database_name": "coupvox-db",
       // 初回デプロイ（squat deploy）時の `wrangler d1 create` の結果で置換されます
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "d3510429-0f80-4374-bc35-2582fbb5449c",
       "migrations_dir": "migrations",
       "migrations_table": "d1_migrations",
     },
