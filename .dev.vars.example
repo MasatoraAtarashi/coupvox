@@ -5,5 +5,12 @@
 # Jev (TypeSafe System One) — https://console.typesafe.ai/keys
 TYPESAFE_API_KEY=
 
-# 個人リンクを組み立てるときの公開 URL
+# 招待リンクを組み立てるときの公開 URL
 APP_URL=http://localhost:5173
+
+# Google OAuth（Google Cloud Console で発行）。未設定ならログインだけ使えない
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# セッション cookie の署名鍵。localhost では未設定でも固定の開発鍵で動く
+SESSION_SECRET=

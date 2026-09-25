@@ -1,9 +1,13 @@
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
+import { createDb } from "../db/client";
+import { claimInvite } from "../server/auth/member";
+import { newSessionPayload } from "../server/auth/session";
 import { ITEM_IDS } from "../server/survey/items";
+import { authHeaders } from "./auth-helper";
 
-export async function api(path: string, init?: RequestInit & { token?: string }) {
+export async function api(path: string, init?: RequestInit & { sub?: string }) {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  if (init?.token) headers.authorization = `Bearer ${init.token}`;
+  if (init?.sub) Object.assign(headers, await authHeaders(init.sub));
   return exports.default.fetch(`https://example.com/api${path}`, {
     ...init,
     headers: { ...headers, ...(init?.headers as Record<string, string>) },
@@ -12,13 +16,25 @@ export async function api(path: string, init?: RequestInit & { token?: string })
 
 export interface SetupResult {
   cycleId: string;
-  tokens: { you: string; partner: string };
+  /** Google の sub。テストではこれがログインの identity になる */
+  subs: { you: string; partner: string };
 }
 
-/** 組を 1 つ作り、両者のトークンと開いたサイクル ID を返す */
+let coupleSeq = 0;
+
+/**
+ * 組を 1 つ作り、両者がログインできる状態にして返す。
+ *
+ * 作成者は setup の時点で紐づき、パートナーは招待リンクを踏んで claim する。
+ * claim をテストの下準備に含めているので、参加の経路が全テストで常に通る。
+ */
 export async function setupCouple(): Promise<SetupResult> {
+  coupleSeq += 1;
+  const subs = { you: `sub-you-${coupleSeq}`, partner: `sub-partner-${coupleSeq}` };
+
   const res = await api("/setup", {
     method: "POST",
+    sub: subs.you,
     body: JSON.stringify({
       coupleName: "テストふたり",
       you: { name: "たろう" },
@@ -29,18 +45,22 @@ export async function setupCouple(): Promise<SetupResult> {
   const body = (await res.json()) as {
     cycle: { id: string };
     links: { memberId: string; url: string }[];
-    youMemberId: string;
   };
-  const tokenOf = (memberId: string) => {
-    const link = body.links.find((candidate) => candidate.memberId === memberId);
-    if (!link) throw new Error("link not found");
-    return link.url.split("/s/")[1];
-  };
-  const partnerId = body.links.find((link) => link.memberId !== body.youMemberId)?.memberId ?? "";
-  return {
-    cycleId: body.cycle.id,
-    tokens: { you: tokenOf(body.youMemberId), partner: tokenOf(partnerId) },
-  };
+
+  // 作成者は claim 済みなので、返るリンクはパートナーの 1 件だけ。
+  // /s/:token は React Router のルートでテスト用エントリに載らないため、
+  // ルートが呼んでいるのと同じ関数を直接叩く
+  const invite = body.links[0];
+  if (!invite) throw new Error("invite link not found");
+  const token = invite.url.split("/s/")[1];
+  const claimed = await claimInvite(
+    createDb(env.DB),
+    token,
+    newSessionPayload(subs.partner, `${subs.partner}@example.com`),
+  );
+  if (!claimed.ok) throw new Error(`claim failed: ${claimed.reason}`);
+
+  return { cycleId: body.cycle.id, subs };
 }
 
 /** 全項目に同じ値を入れた回答 */
@@ -56,14 +76,14 @@ export function splitAnswers(responsive: number, insensitive: number): Record<st
 }
 
 export function submit(
-  token: string,
+  sub: string,
   cycleId: string,
   answers: Record<string, number>,
   extra: { comment?: string; shareComment?: boolean } = {},
 ) {
   return api("/survey", {
     method: "POST",
-    token,
+    sub,
     body: JSON.stringify({ cycleId, answers, ...extra }),
   });
 }

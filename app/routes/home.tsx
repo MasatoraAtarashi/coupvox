@@ -1,24 +1,27 @@
 import { useLoaderData } from "react-router";
 import { AppShell, Card, Header, PrimaryButton, SecondaryButton, Tabs } from "../components/shell";
 import { loadView } from "../../server/lib/dashboard";
-import { memberFromRequest } from "../../server/lib/session";
+import { memberFromRequest } from "../../server/auth/member";
+import { readSessionFromRequest } from "../../server/auth/session";
 import { SURVEY_ITEMS } from "../../server/survey/items";
 import type { Route } from "./+types/home";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
-  const me = await memberFromRequest(env.DB, request);
-  if (!me) return { authorized: false as const };
+  // ログイン済みでも、まだどの組にも属していないことがある（組を作る前／招待リンクを踏む前）
+  const signedIn = Boolean(await readSessionFromRequest(request, env));
+  const me = await memberFromRequest(env, request);
+  if (!me) return { authorized: false as const, signedIn };
 
   const view = await loadView(env.DB, me, env.APP_URL ?? new URL(request.url).origin);
-  if (!view) return { authorized: false as const };
+  if (!view) return { authorized: false as const, signedIn };
   return { authorized: true as const, view, itemCount: SURVEY_ITEMS.length };
 }
 
 export default function Home() {
   const loaded = useLoaderData<typeof loader>();
 
-  if (!loaded.authorized) return <Landing />;
+  if (!loaded.authorized) return <Landing signedIn={loaded.signedIn} />;
 
   const { view, itemCount } = loaded;
   const canAnswer = Boolean(view.openCycleId) && !view.meDone;
@@ -162,7 +165,7 @@ function LastScore({
   );
 }
 
-function Landing() {
+function Landing({ signedIn }: { signedIn: boolean }) {
   return (
     <AppShell>
       <Header />
@@ -177,14 +180,25 @@ function Landing() {
             「聴いてもらえた」「分かってもらえた」という感覚を16個の質問ではかります。
             記録はふたりだけが見られます。
           </p>
-          <div className="mt-5">
-            <PrimaryButton href="/setup">ふたりではじめる</PrimaryButton>
-          </div>
+          {signedIn ? (
+            <>
+              <p className="mt-4 text-[14px] leading-[1.9] text-[var(--color-ink-sub)]">
+                ログインできています。組を作るか、相手から届いた招待リンクをひらいてください。
+              </p>
+              <div className="mt-5">
+                <PrimaryButton href="/setup">ふたりではじめる</PrimaryButton>
+              </div>
+            </>
+          ) : (
+            <div className="mt-5">
+              <PrimaryButton href="/api/auth/google?next=%2Fsetup">Google ではじめる</PrimaryButton>
+            </div>
+          )}
         </Card>
         <p className="mt-6 text-center text-[12px] leading-[2] text-[var(--color-ink-sub)]">
-          すでに使っている場合は、自分のリンクをひらいてください。
-          <br />
-          この端末が誰のものかは、そのリンクで決まります。
+          {signedIn
+            ? "招待リンクをひらくと、いまのアカウントでその組に参加します。"
+            : "すでに使っている場合も、同じ Google アカウントでログインしてください。"}
         </p>
       </div>
     </AppShell>

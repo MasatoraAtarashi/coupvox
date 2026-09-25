@@ -1,5 +1,18 @@
 import { useState } from "react";
+import { redirect } from "react-router";
+import { memberFromRequest } from "../../server/auth/member";
+import { readSessionFromRequest } from "../../server/auth/session";
 import { AppShell, Card, Header, PrimaryButton } from "../components/shell";
+import type { Route } from "./+types/setup";
+
+/** 組を作るにはログインが要る。すでにどこかの組にいる人は作らせない */
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const env = context.cloudflare.env;
+  const session = await readSessionFromRequest(request, env);
+  if (!session) return redirect("/api/auth/google?next=%2Fsetup");
+  if (await memberFromRequest(env, request)) return redirect("/");
+  return null;
+}
 
 interface PersonalLink {
   memberId: string;
@@ -47,7 +60,6 @@ export default function Setup() {
 
   if (links) {
     const partnerLink = links.find((link) => link.memberId !== youMemberId);
-    const myLink = links.find((link) => link.memberId === youMemberId);
     return (
       <AppShell>
         <Header />
@@ -55,7 +67,8 @@ export default function Setup() {
           <Card className="px-6 py-[26px]">
             <div className="text-[24px] leading-[1.6] font-bold">はじまりました。</div>
             <p className="mt-3 text-[14px] leading-[1.9] text-[var(--color-ink-sub)]">
-              1回目のアンケートがひらいています。この端末はもうあなたのものです。
+              1回目のアンケートがひらいています。別の端末で見るときは、同じ Google
+              アカウントでログインしてください。
             </p>
           </Card>
 
@@ -65,23 +78,12 @@ export default function Setup() {
                 {partnerLink.name} さんに、このリンクを渡してください
               </div>
               <p className="mt-2 text-[13px] leading-[1.9] text-[var(--color-ink-sub)]">
-                LINEやメッセージで送ってください。ひらいた端末がそのまま {partnerLink.name}{" "}
-                さんのものになります。ほかの人には渡さないでください。
+                LINEやメッセージで送ってください。ひらいて Google ログインすると、{" "}
+                {partnerLink.name} さんとして組に参加します。一度きりのリンクなので、
+                ほかの人には渡さないでください。
               </p>
               <LinkBox url={partnerLink.url} />
             </Card>
-          )}
-
-          {myLink && (
-            <details className="mt-3.5 rounded-[22px] bg-[var(--color-panel)] px-[18px] py-4">
-              <summary className="cursor-pointer text-[13px] font-medium">
-                自分のリンク（別の端末でひらくとき）
-              </summary>
-              <p className="mt-2 text-[12px] leading-[1.8] text-[var(--color-ink-sub)]">
-                ブックマークしておくと、次回からここから回答できます。
-              </p>
-              <LinkBox url={myLink.url} />
-            </details>
           )}
 
           <div className="mt-6">

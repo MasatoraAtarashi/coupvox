@@ -4,7 +4,8 @@ import { z } from "zod";
 import { createDb } from "../../../db/client";
 import { couples, members } from "../../../db/schema";
 import { createCycle, getMembers, personalLinks } from "../../lib/cycles";
-import { generateToken, isSecureRequest, sessionCookie } from "../../lib/session";
+import { generateToken } from "../../lib/session";
+import { findMemberByGoogleSub } from "../../auth/member";
 import type { AppEnv } from "../../env";
 
 const personSchema = z.object({
@@ -23,7 +24,9 @@ const setupSchema = z.object({
 
 /**
  * 組を 1 つ作る。インスタンスは複数の組を持てる（組どうしのデータは coupleId で分離）。
- * 作成者はその場でログイン状態になり、パートナーには個人リンクを渡してもらう。
+ *
+ * 作成者はログイン済みの Google アカウントにその場で紐づく（claim 済みとして作る）。
+ * パートナーには招待リンクを渡してもらい、相手が Google ログインした時点で紐づく。
  */
 export const setupRoute = new Hono<AppEnv>().post(
   "/",
@@ -31,6 +34,11 @@ export const setupRoute = new Hono<AppEnv>().post(
   async (c) => {
     const db = createDb(c.env.DB);
     const data = c.req.valid("json");
+    const session = c.get("session");
+
+    // 1 Google アカウント = 1 メンバー。二重に組を作らせない
+    const existing = await findMemberByGoogleSub(db, session.sub);
+    if (existing) return c.json({ error: "already_member" }, 409);
 
     const couple = {
       id: crypto.randomUUID(),
@@ -40,11 +48,16 @@ export const setupRoute = new Hono<AppEnv>().post(
     };
     await db.insert(couples).values(couple);
 
-    const roster = [data.you, data.partner].map((person) => ({
+    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const roster = [data.you, data.partner].map((person, index) => ({
       id: crypto.randomUUID(),
       coupleId: couple.id,
       name: person.name,
-      email: person.email && person.email.length > 0 ? person.email : null,
+      // 作成者のメールはフォーム入力より Google の verified email を信用する
+      email:
+        index === 0 ? session.email : person.email && person.email.length > 0 ? person.email : null,
+      googleSub: index === 0 ? session.sub : null,
+      claimedAt: index === 0 ? now : null,
       token: generateToken(),
     }));
     await db.insert(members).values(roster);
@@ -54,7 +67,7 @@ export const setupRoute = new Hono<AppEnv>().post(
     const cycle = await createCycle(db, { ...couple, createdAt: "" });
     const appUrl = c.env.APP_URL ?? new URL(c.req.url).origin;
 
-    c.header("set-cookie", sessionCookie(roster[0].token, isSecureRequest(c.req.url)));
+    // cookie は OAuth のコールバックが張っている。ここで張り直す必要はない
     return c.json(
       {
         couple,

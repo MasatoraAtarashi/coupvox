@@ -34,13 +34,13 @@
 
 ## 決まっていること（変更する前に理由を確認する）
 
-| 項目         | 決定                                                    | 理由                                           |
-| ------------ | ------------------------------------------------------- | ---------------------------------------------- |
-| 通知手段     | **メールを使わない**。個人リンクを手渡しで共有          | ドメイン未取得。メール配信の検証コストを避けた |
-| コメント共有 | **書いた本人が毎回選ぶ**（`responses.shareComment`）    | 共有しない前提でないと本音が書けない           |
-| AI           | **Workers AI（無料枠）**                                | 外部 API キー不要で動かせる                    |
-| テナント     | **マルチテナント**（すべて `coupleId` スコープ）        | あとで他の人にも配る想定                       |
-| 認証         | 32バイトのメンバートークン → httpOnly cookie `cv_token` | パスワード不要、リンクを渡すだけで使える       |
+| 項目         | 決定                                                             | 理由                                                         |
+| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| 通知手段     | **メールを使わない**。個人リンクを手渡しで共有                   | ドメイン未取得。メール配信の検証コストを避けた               |
+| コメント共有 | **書いた本人が毎回選ぶ**（`responses.shareComment`）             | 共有しない前提でないと本音が書けない                         |
+| AI           | **Workers AI（無料枠）**                                         | 外部 API キー不要で動かせる                                  |
+| テナント     | **マルチテナント**（すべて `coupleId` スコープ）                 | あとで他の人にも配る想定                                     |
+| 認証         | **Google ログイン**（アプリ内 OAuth + PKCE）。招待リンクは参加券 | 端末をまたげる。リンクを控えていないとスマホで見られなかった |
 
 ## プライバシーの決まり（壊さないこと）
 
@@ -64,7 +64,8 @@ server/lib/advice.ts      Workers AI で提案を作る（失敗時は FALLBACK�
 server/lib/jev.ts         Jev への最小 fetch クライアント（SDK は Workers で動かないので自前）
 server/lib/triage.ts      コメントの話題・困り度・トーン判定
 server/lib/scheduler.ts   cron から呼ぶ。全 couple を回す
-server/api/routes/        setup.ts（未認証）/ survey.ts / cycles.ts
+server/auth/              google-oauth.ts（PKCE）/ session.ts（署名cookie）/ member.ts（claim）/ routes.ts
+server/api/routes/        setup.ts（要ログイン）/ survey.ts / cycles.ts
 app/routes/               home（今週）/ survey（1問1画面）/ result（みる）/ setup / enter / logout
 app/components/           shell.tsx（枠・ヘッダ・タブ・ボタン）charts.tsx（ベン図・推移）
 ```
@@ -78,8 +79,9 @@ pnpm exec wrangler d1 migrations apply DB --local
 pnpm dev                          # http://localhost:5173
 ```
 
-- 最初に `/setup` で組を作る。作成者の cookie がその場でセットされ、相手用の個人リンク `/s/<token>` が表示される
-- トークンを直接見るなら: `pnpm exec wrangler d1 execute DB --local --command "SELECT name, token FROM members;"`
+- `/` から Google ログイン → `/setup` で組を作る → 表示された招待リンクを相手に渡す
+- ローカルで Google ログインを試すには `.dev.vars` に `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` が要る
+- 招待トークンを直接見るなら: `pnpm exec wrangler d1 execute DB --local --command "SELECT name, token, google_sub FROM members;"`
 - 検証: `pnpm exec tsc -b` と `pnpm test`
 
 ## デプロイ
@@ -94,6 +96,7 @@ pnpm dev                          # http://localhost:5173
 
 ## 残っていること
 
+- [ ] **既存の2人が、手元の招待リンクで claim できるか本番で確認する**（未 claim のまま残っている）
 - [ ] 本番で一周の動作確認（`/setup` から組を作って16問まで）。ローカルでしか通していない
 - [ ] Dependabot が開いている PR（vite / react / wrangler ほか）の取り込み
 - [ ] R4〜R8 / I4〜I8 の文言は暫定。R1〜R3・I1〜I3 は支給された正式な文言なので変えない（`test/scoring.test.ts` が固定している）

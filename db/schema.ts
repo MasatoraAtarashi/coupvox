@@ -14,7 +14,13 @@ export const couples = sqliteTable("couples", {
   createdAt: text("created_at").notNull().default(now),
 });
 
-/** 二人のメンバー。token は個人用リンク（メールから開く URL）の鍵 */
+/**
+ * 二人のメンバー。
+ *
+ * token は招待リンク（参加券）の鍵。ログイン手段ではない。リンクを開いた人が
+ * Google ログインすると googleSub が埋まり、以降はどの端末でも Google ログイン
+ * だけで入れる。
+ */
 export const members = sqliteTable(
   "members",
   {
@@ -23,8 +29,15 @@ export const members = sqliteTable(
       .notNull()
       .references(() => couples.id),
     name: text("name").notNull(),
-    /** 通知手段を足すとき用。いまは任意（メール配信は行っていない） */
+    /** Google の verified email。claim 時に埋まる。表示用で、認可には使わない */
     email: text("email"),
+    /**
+     * Google アカウントの不変 ID。未参加のあいだは NULL。
+     * SQLite の UNIQUE は NULL を重複扱いしないので、未参加の行は何行でも共存できる。
+     */
+    googleSub: text("google_sub").unique(),
+    /** 招待リンクが使われた時刻。埋まっているメンバーのリンクはもう配らない */
+    claimedAt: text("claimed_at"),
     token: text("token").notNull().unique(),
     createdAt: text("created_at").notNull().default(now),
   },

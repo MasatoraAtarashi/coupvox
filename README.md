@@ -32,26 +32,36 @@
 
 ## 認証
 
-パスワードも外部 IdP も置かない。メンバーごとの 32 バイトの推測不能なトークン 1 本で認証する（`server/lib/session.ts`）。
+**Google ログイン**（アプリ内 OAuth。認可コードフロー + PKCE）。`server/auth/` にある。
 
-- 個人リンク `/s/<token>` を開くと httpOnly cookie `cv_token` に載り、以降はダッシュボードも開ける
-- **メールは使わない**。個人リンクは手渡しで共有する（ドメイン未取得のため、メール配信の検証コストを避けた）
+- セッションは HMAC-SHA256 で署名した httpOnly cookie `cv_session`。サーバ側にセッションストアは持たない
+- cookie が持つのはメンバー ID ではなく Google の `sub`。毎リクエスト `sub` で members を引き直すので、DB が唯一の真実になる
+- 招待リンク `/s/<token>` は**ログイン手段ではなく、組に参加するための一度きりの参加券**。開いた人が Google ログインすると、そのメンバーに Google アカウントが結びつく（claim）
+- 以降はどの端末でも Google ログインだけで入れる
+- **メールは使わない**。招待リンクは手渡しで共有する（ドメイン未取得のため、メール配信の検証コストを避けた）
+- 1 つの Google アカウントが属せる組は 1 つ
 - データはすべて `coupleId` スコープのマルチテナント
+
+### はじめかた
+
+1. 組を作る人が `/` から Google ログインし、`/setup` で組を作る
+2. 表示された招待リンクを相手に渡す
+3. 相手がリンクを開いて Google ログインすると、その組に参加する
 
 ## セットアップ（ローカル開発）
 
 ```bash
 pnpm install
-cp .dev.vars.example .dev.vars   # TYPESAFE_API_KEY は空でも動く
+cp .dev.vars.example .dev.vars   # 空でも動く（Google ログインだけ使えない）
 pnpm db:migrate:local            # ローカル D1 にマイグレーション適用
 pnpm dev                         # http://localhost:5173
 ```
 
-- 最初に `/setup` で組を作る。作成者の cookie がその場でセットされ、相手用の個人リンク `/s/<token>` が表示される
-- トークンを直接見るなら:
+- ローカルで Google ログインを試すには `.dev.vars` に `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` が要る。`SESSION_SECRET` は localhost では未設定でも動く（固定の開発鍵にフォールバックする）
+- 招待トークンを直接見るなら:
 
   ```bash
-  pnpm exec wrangler d1 execute DB --local --command "SELECT name, token FROM members;"
+  pnpm exec wrangler d1 execute DB --local --command "SELECT name, token, google_sub FROM members;"
   ```
 
 ## 主なコマンド
@@ -86,12 +96,41 @@ app/components/           shell.tsx（枠・ヘッダ・タブ・ボタン）cha
 
 ## デプロイ
 
-初回だけ:
+D1 と `vars.APP_URL` は設定済み。main に push すれば `deploy.yml` がマイグレーション適用 → デプロイまで流す。
 
-1. `wrangler d1 create coupvox-db` して `wrangler.jsonc` の `database_id` を実 ID に差し替える
-2. `pnpm db:migrate:remote`
-3. `wrangler secret put TYPESAFE_API_KEY`（使う場合のみ。対話入力で。CLI 引数に値を書かない）
-4. `wrangler.jsonc` の `vars.APP_URL` を本番 URL にする（個人リンクの生成に使う）
+### Google OAuth の設定（初回だけ）
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) で OAuth クライアント（ウェブ アプリケーション）を作る
+   - クライアント名は `あいだ (coupvox)` のように、他のアプリと区別できる名前にする
+   - OAuth 同意画面のアプリ名は `あいだ`。**これはログイン画面で相手に表示される**
+2. 承認済みのリダイレクト URI に両方登録する
+   - `https://coupvox.kaito-technology.workers.dev/api/auth/google/callback`
+   - `http://localhost:5173/api/auth/google/callback`
+3. secret を入れる（対話入力。CLI 引数に値を書かない）
+
+   ```bash
+   pnpm exec wrangler versions secret put GOOGLE_CLIENT_ID
+   ```
+
+   ```bash
+   pnpm exec wrangler versions secret put GOOGLE_CLIENT_SECRET
+   ```
+
+   セッションの署名鍵は生成してそのまま流し込む（画面にも履歴にも残さない）:
+
+   ```bash
+   openssl rand -base64 32 | pnpm exec wrangler versions secret put SESSION_SECRET
+   ```
+
+   `versions secret put` は新しいバージョンを作るだけなので、最後に反映する:
+
+   ```bash
+   pnpm exec wrangler versions deploy
+   ```
+
+**`SESSION_SECRET` を入れずにデプロイすると、cookie に署名できず誰もログインできない。** `wrangler secret list` で 3 つ揃っているか確認すること。
+
+`TYPESAFE_API_KEY` は使う場合のみ同じ手順で入れる。
 
 GitHub Actions で自動デプロイする場合:
 
