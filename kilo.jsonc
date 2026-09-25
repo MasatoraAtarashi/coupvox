@@ -1,0 +1,45 @@
+{
+  "mcp": {
+    "cloudflare-docs": {
+      "type": "remote",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "enabled": true
+    },
+    "cloudflare-observability": {
+      "type": "remote",
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "enabled": true
+    }
+  },
+  "permission": {
+    "bash": {
+      "git status": "allow",
+      "git diff": "allow",
+      "git log": "allow",
+      "git branch": "allow",
+      "pnpm run *": "allow",
+      "pnpm test": "allow",
+      "pnpm typecheck": "allow",
+      "rm -rf *": "deny",
+      "git push --force*": "ask",
+      "*": "ask"
+    },
+    "edit": {
+      "src/**": "allow",
+      "app/**": "allow",
+      "server/**": "allow",
+      "db/**": "allow",
+      "test/**": "allow"
+    },
+    "read": {
+      ".env": "deny",
+      ".env.*": "deny",
+      ".dev.vars": "deny",
+      "!.dev.vars.example": "allow"
+    }
+  },
+  "instructions": [
+    ".kilo/rules/communication.md",
+    ".kilo/rules/security.md"
+  ]
+}

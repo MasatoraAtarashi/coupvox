@@ -1,0 +1,10 @@
+{
+  "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
+  // squat 共通ハーネス: 全エージェントに同じルール・MCP・hooks を配布する
+  "targets": ["*"],
+  "features": ["rules", "mcp", "hooks", "permissions", "commands", "skills"],
+  "outputRoots": ["."],
+  "delete": true,
+  // 生成物（CLAUDE.md / AGENTS.md / .qwen など）はコミットして、clone 直後から全エージェントで使えるようにする
+  "gitignoreTargetsOnly": false,
+}

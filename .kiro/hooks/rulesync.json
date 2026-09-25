@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "PreToolUse",
+      "trigger": "PreToolUse",
+      "matcher": "Bash",
+      "action": {
+        "type": "command",
+        "command": ".rulesync/hooks/security-guard.sh"
+      },
+      "enabled": true
+    }
+  ]
+}

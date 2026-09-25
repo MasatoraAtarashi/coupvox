@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    // 軽量セキュリティガード 1 本（本丸の強制力は lefthook の git hooks に置く）
+    "preToolUse": [
+      {
+        "matcher": "Bash",
+        "command": ".rulesync/hooks/security-guard.sh",
+      },
+    ],
+  },
+}

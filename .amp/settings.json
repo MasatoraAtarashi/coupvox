@@ -1,0 +1,147 @@
+{
+  "amp.mcpServers": {
+    "cloudflare-docs": {
+      "type": "http",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "env": {}
+    },
+    "cloudflare-observability": {
+      "type": "http",
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "env": {}
+    }
+  },
+  "amp.tools.disable": [],
+  "amp.permissions": [
+    {
+      "tool": "bash",
+      "action": "reject",
+      "matches": {
+        "cmd": "rm -rf *"
+      }
+    },
+    {
+      "tool": "read",
+      "action": "reject",
+      "matches": {
+        "cmd": ".dev.vars"
+      }
+    },
+    {
+      "tool": "read",
+      "action": "reject",
+      "matches": {
+        "cmd": ".env"
+      }
+    },
+    {
+      "tool": "read",
+      "action": "reject",
+      "matches": {
+        "cmd": ".env.*"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "ask",
+      "matches": {
+        "cmd": "git push --force*"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "ask"
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "git branch"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "git diff"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "git log"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "git status"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "pnpm run *"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "pnpm test"
+      }
+    },
+    {
+      "tool": "bash",
+      "action": "allow",
+      "matches": {
+        "cmd": "pnpm typecheck"
+      }
+    },
+    {
+      "tool": "edit",
+      "action": "allow",
+      "matches": {
+        "cmd": "app/**"
+      }
+    },
+    {
+      "tool": "edit",
+      "action": "allow",
+      "matches": {
+        "cmd": "db/**"
+      }
+    },
+    {
+      "tool": "edit",
+      "action": "allow",
+      "matches": {
+        "cmd": "server/**"
+      }
+    },
+    {
+      "tool": "edit",
+      "action": "allow",
+      "matches": {
+        "cmd": "src/**"
+      }
+    },
+    {
+      "tool": "edit",
+      "action": "allow",
+      "matches": {
+        "cmd": "test/**"
+      }
+    },
+    {
+      "tool": "read",
+      "action": "allow",
+      "matches": {
+        "cmd": "!.dev.vars.example"
+      }
+    }
+  ]
+}

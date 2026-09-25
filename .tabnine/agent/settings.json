@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "cloudflare-docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "type": "http",
+      "env": {}
+    },
+    "cloudflare-observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "type": "http",
+      "env": {}
+    }
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".rulesync/hooks/security-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "tools": {
+    "exclude": [
+      "run_shell_command(rm -rf)"
+    ]
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "mcpServers": {
+    "cloudflare-docs": {
+      "type": "http",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "env": {}
+    },
+    "cloudflare-observability": {
+      "type": "http",
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "env": {}
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".rulesync/hooks/security-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "toolPermissions": [
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^rm -rf .*$",
+      "permission": {
+        "type": "deny"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^git push --force.*$",
+      "permission": {
+        "type": "ask-user"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^pnpm typecheck$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^pnpm run .*$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^git status$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^git branch$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^pnpm test$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^git diff$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "shellInputRegex": "^git log$",
+      "permission": {
+        "type": "allow"
+      }
+    },
+    {
+      "toolName": "view",
+      "permission": {
+        "type": "deny"
+      }
+    },
+    {
+      "toolName": "launch-process",
+      "permission": {
+        "type": "ask-user"
+      }
+    }
+  ]
+}

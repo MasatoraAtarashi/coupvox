@@ -1,0 +1,28 @@
+default_permissions = "rulesync"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+
+[mcp_servers.cloudflare-docs]
+url = "https://docs.mcp.cloudflare.com/mcp"
+
+[mcp_servers.cloudflare-observability]
+url = "https://observability.mcp.cloudflare.com/mcp"
+
+[permissions.rulesync]
+extends = ":workspace"
+
+[permissions.rulesync.filesystem]
+":minimal" = "read"
+glob_scan_max_depth = 8
+
+[permissions.rulesync.filesystem.":workspace_roots"]
+".env" = "deny"
+".env.*" = "deny"
+".dev.vars" = "deny"
+"!.dev.vars.example" = "read"
+"src/**" = "write"
+"app/**" = "write"
+"server/**" = "write"
+"db/**" = "write"
+"test/**" = "write"
+".git/**" = "write"

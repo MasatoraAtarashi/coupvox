@@ -1,0 +1,94 @@
+@import "tailwindcss" source("..");
+
+/**
+ * デザイントークンは design_handoff_aida の確定値。
+ * コントラスト比（WCAG AA）を満たすよう調整済みなので、色は変更しないこと。
+ */
+@theme {
+  --font-sans: "Zen Maru Gothic", sans-serif;
+
+  --color-page: #f3eadf;
+  --color-app: #fdf8f2;
+  --color-card: #ffffff;
+  --color-panel: #f6efe8;
+  --color-track: #f1e7dc;
+
+  --color-ink: #3a332e;
+  --color-ink-sub: #6e645b;
+  --color-ink-muted: #5c534b;
+
+  --color-coral: #f2846b;
+  --color-coral-deep: #b84d33;
+  --color-coral-text: #af4830;
+  --color-coral-hover: #9e4430;
+  --color-coral-big: #d95f45;
+  --color-coral-tint: #fff1eb;
+
+  --color-peri: #8c93db;
+  --color-peri-deep: #5a61b8;
+  --color-peri-tint: #eff0fc;
+
+  --color-amber-card: #ffe9bf;
+  --color-amber-label: #7a5a2e;
+  --color-amber-ink: #453721;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+textarea {
+  font-family: inherit;
+}
+
+/* 数字は桁揺れを防ぐ */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes aIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aPop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.a-in {
+  animation: aIn 0.4s ease both;
+}
+
+.a-pop {
+  animation: aPop 0.5s ease both;
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/mcp-schema.json",
+  "mcpServers": {
+    // Cloudflare 公式ドキュメント検索（認証不要）
+    "cloudflare-docs": {
+      "type": "http",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "env": {},
+    },
+    // Workers ログ・メトリクスのクエリ（初回接続時に Cloudflare OAuth が必要）
+    "cloudflare-observability": {
+      "type": "http",
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "env": {},
+    },
+  },
+}

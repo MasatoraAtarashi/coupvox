@@ -1,0 +1,9 @@
+# ローカル開発用の環境変数（.dev.vars はコミットされない）
+# cp .dev.vars.example .dev.vars して、使うものだけ埋める。
+# 未設定でもアプリは動く（Jev トリアージだけがスキップされる）。
+
+# Jev (TypeSafe System One) — https://console.typesafe.ai/keys
+TYPESAFE_API_KEY=
+
+# 個人リンクを組み立てるときの公開 URL
+APP_URL=http://localhost:5173

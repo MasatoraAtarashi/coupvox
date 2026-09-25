@@ -1,0 +1,44 @@
+/**
+ * Wrangler 設定の詳細: https://developers.cloudflare.com/workers/wrangler/configuration/
+ * D1 の database_id は初回の `squat deploy` / `wrangler d1 create coupvox-db` の結果で置換されます。
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coupvox",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./workers/app.ts",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "coupvox-db",
+      // 初回デプロイ（squat deploy）時の `wrangler d1 create` の結果で置換されます
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+      "migrations_table": "d1_migrations",
+    },
+  ],
+  // AI アドバイス生成（Workers AI）
+  "ai": {
+    "binding": "AI",
+  },
+  // 毎日 00:10 UTC（= 09:10 JST）に「締切処理 → 次サイクルを開く」を判定する。
+  // 実際の配信間隔は couples.cadence_days（既定 14 日）で決まる。
+  "triggers": {
+    "crons": ["10 0 * * *"],
+  },
+  "vars": {
+    // 個人リンクを組み立てるときの公開 URL。デプロイ後の Workers URL / 独自ドメインに置き換える
+    "APP_URL": "http://localhost:5173",
+  },
+  /**
+   * secret（`wrangler secret put <NAME>`、ローカルは .dev.vars）:
+   * - TYPESAFE_API_KEY : Jev(System One) で自由記述をトリアージする
+   * 未設定でもアプリは動く（トリアージだけがスキップされる）。
+   */
+}

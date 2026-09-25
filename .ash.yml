@@ -1,0 +1,34 @@
+# ASH (automated-security-helper) 設定 — squat 共通スターター
+# ティアによって global_settings.severity_threshold が変わる（strict=LOW / standard=HIGH / light=CRITICAL）。
+# 誤検知が出た場合は suppressions に「理由コメント付き」で追加する（kawasemi 運用と同じ）。
+project_name: "coupvox"
+
+global_settings:
+  severity_threshold: "LOW"
+  ignore_paths:
+    - path: node_modules/**
+      reason: インストール済み依存のため
+    - path: .wrangler/**
+      reason: wrangler のローカルビルド・状態ディレクトリのため
+    - path: dist/**
+      reason: ビルド成果物のため
+    - path: build/**
+      reason: ビルド成果物のため
+    - path: .react-router/**
+      reason: react-router のビルドキャッシュのため
+    - path: pnpm-lock.yaml
+      reason: lockfile のハッシュ値が secret 検出で false positive になるため
+    - path: .ash/**
+      reason: ASH 自身のレポート出力のため
+    - path: worker-configuration.d.ts
+      reason: wrangler types が生成する型定義ファイルのため
+    - path: .claude/skills/**
+      reason: rulesync が展開する外部スキルのため
+    - path: .agents/skills/**
+      reason: rulesync が展開する外部スキルのため
+    - path: .codex/skills/**
+      reason: rulesync が展開する外部スキルのため
+    - path: .junie/skills/**
+      reason: rulesync が展開する外部スキルのため
+    - path: migrations/meta/**
+      reason: drizzle-kit が生成するマイグレーションメタデータ（JSON）のため

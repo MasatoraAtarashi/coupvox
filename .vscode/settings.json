@@ -1,0 +1,42 @@
+{
+  "files.associations": {
+    "wrangler.json": "jsonc"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "git status": true,
+    "git diff": true,
+    "git log": true,
+    "git branch": true,
+    "pnpm run *": true,
+    "pnpm test": true,
+    "pnpm typecheck": true,
+    "rm -rf *": false
+  },
+  "chat.tools.edits.autoApprove": {
+    "src/**": true,
+    "app/**": true,
+    "server/**": true,
+    "db/**": true,
+    "test/**": true
+  },
+  "roo-cline.allowedCommands": [
+    "git status",
+    "git diff",
+    "git log",
+    "git branch",
+    "pnpm run *",
+    "pnpm test",
+    "pnpm typecheck"
+  ],
+  "roo-cline.deniedCommands": ["rm -rf *", "rm -rf "],
+  "zoo-code.allowedCommands": [
+    "git status",
+    "git diff",
+    "git log",
+    "git branch",
+    "pnpm run *",
+    "pnpm test",
+    "pnpm typecheck"
+  ],
+  "zoo-code.deniedCommands": ["rm -rf *", "rm -rf "]
+}

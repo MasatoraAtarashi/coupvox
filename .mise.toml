@@ -1,0 +1,9 @@
+[tools]
+node = "22"
+pnpm = "10"
+"ubi:gitleaks/gitleaks" = "latest"
+"ubi:woodruffw/zizmor" = "latest"
+
+[tasks.setup]
+description = "依存インストール + git hooks 有効化"
+run = "pnpm install"

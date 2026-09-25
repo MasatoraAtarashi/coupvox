@@ -1,0 +1,33 @@
+[[mcp_servers]]
+name = "cloudflare-docs"
+transport = "http"
+url = "https://docs.mcp.cloudflare.com/mcp"
+
+[mcp_servers.env]
+[[mcp_servers]]
+name = "cloudflare-observability"
+transport = "http"
+url = "https://observability.mcp.cloudflare.com/mcp"
+
+[mcp_servers.env]
+[tools.bash]
+permission = "ask"
+allowlist = [ "git branch", "git diff", "git log", "git status", "pnpm run *", "pnpm test", "pnpm typecheck" ]
+denylist = [ "rm -rf *" ]
+
+[tools.edit]
+allowlist = [ "app/**", "db/**", "server/**", "src/**", "test/**" ]
+
+[tools.read_file]
+allowlist = [ "!.dev.vars.example" ]
+denylist = [ ".dev.vars", ".env", ".env.*" ]
+
+[tools.git_bash]
+permission = "ask"
+allowlist = [ "git branch", "git diff", "git log", "git status", "pnpm run *", "pnpm test", "pnpm typecheck" ]
+denylist = [ "rm -rf *" ]
+
+[tools.powershell]
+permission = "ask"
+allowlist = [ "git branch", "git diff", "git log", "git status", "pnpm run *", "pnpm test", "pnpm typecheck" ]
+denylist = [ "rm -rf *" ]

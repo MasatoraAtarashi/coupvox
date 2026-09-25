@@ -1,0 +1,47 @@
+{
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": ".rulesync/hooks/security-guard.sh",
+        "matcher": "Bash"
+      }
+    ]
+  },
+  "allowedTools": [],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": [
+        "git status",
+        "git diff",
+        "git log",
+        "git branch",
+        "pnpm run *",
+        "pnpm test",
+        "pnpm typecheck"
+      ],
+      "deniedCommands": [
+        "rm -rf *"
+      ]
+    },
+    "read": {
+      "allowedPaths": [
+        "!.dev.vars.example"
+      ],
+      "deniedPaths": [
+        ".env",
+        ".env.*",
+        ".dev.vars"
+      ]
+    },
+    "write": {
+      "allowedPaths": [
+        "src/**",
+        "app/**",
+        "server/**",
+        "db/**",
+        "test/**"
+      ],
+      "deniedPaths": []
+    }
+  }
+}

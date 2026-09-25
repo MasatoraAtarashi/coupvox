@@ -1,0 +1,16 @@
+[[plugins]]
+name = "cloudflare-docs"
+type = "http"
+url = "https://docs.mcp.cloudflare.com/mcp"
+
+[plugins.env]
+[[plugins]]
+name = "cloudflare-observability"
+type = "http"
+url = "https://observability.mcp.cloudflare.com/mcp"
+
+[plugins.env]
+[permissions]
+allow = [ "Bash(git branch)", "Bash(git diff)", "Bash(git log)", "Bash(git status)", "Bash(pnpm run *)", "Bash(pnpm test)", "Bash(pnpm typecheck)", "Edit(app/**)", "Edit(db/**)", "Edit(server/**)", "Edit(src/**)", "Edit(test/**)", "Read(!.dev.vars.example)" ]
+ask = [ "Bash", "Bash(git push --force*)" ]
+deny = [ "Bash(rm -rf *)", "Read(.dev.vars)", "Read(.env)", "Read(.env.*)" ]

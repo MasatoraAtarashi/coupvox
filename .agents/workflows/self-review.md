@@ -1,0 +1,17 @@
+---
+description: origin/main との diff を CI と同じ基準で自己レビューする
+trigger: /self-review
+turbo: true
+---
+# Workflow: /self-review
+
+`git diff origin/main...HEAD` の全変更を、以下の観点でレビューしてください。
+
+1. **P1（マスト修正）**: バグ・セキュリティ問題（secrets のハードコード、バリデーション欠落）・型エラー・テスト不足
+2. **P2（推奨修正）**: エラーハンドリング不足・命名・Cloudflare ルール違反（rules/cloudflare.md 参照）
+3. **P3（参考）**: スタイル・軽微な改善
+
+各指摘は「ファイル:行 / 重要度 / 理由 / 修正案」の形式で列挙してください。
+P1 が 1 件以上ある場合は、続けて修正まで実施してください。
+
+// turbo

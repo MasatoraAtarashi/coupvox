@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "cloudflare-docs": {
+        "type": "http",
+        "url": "https://docs.mcp.cloudflare.com/mcp"
+      },
+      "cloudflare-observability": {
+        "type": "http",
+        "url": "https://observability.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}

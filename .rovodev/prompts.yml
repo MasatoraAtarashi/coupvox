@@ -1,0 +1,13 @@
+prompts:
+  - name: db-new
+    description: D1 スキーマ変更からマイグレーション生成・適用までを一括で行う
+    content_file: prompts/db-new.md
+  - name: deploy
+    description: typecheck と test を通してから wrangler deploy でデプロイする
+    content_file: prompts/deploy.md
+  - name: pr-ready
+    description: push して CI を監視し、失敗を修正して PR をマージ可能な状態にする
+    content_file: prompts/pr-ready.md
+  - name: self-review
+    description: origin/main との diff を CI と同じ基準で自己レビューする
+    content_file: prompts/self-review.md

@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$COMMANDCODE_PROJECT_DIR\"/.rulesync/hooks/security-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Edit(app/**)",
+      "Edit(db/**)",
+      "Edit(server/**)",
+      "Edit(src/**)",
+      "Edit(test/**)",
+      "Read(!.dev.vars.example)",
+      "Shell(git branch)",
+      "Shell(git diff)",
+      "Shell(git log)",
+      "Shell(git status)",
+      "Shell(pnpm run *)",
+      "Shell(pnpm test)",
+      "Shell(pnpm typecheck)"
+    ],
+    "ask": [
+      "Shell",
+      "Shell(git push --force*)"
+    ],
+    "deny": [
+      "Read(.dev.vars)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Shell(rm -rf *)"
+    ]
+  }
+}

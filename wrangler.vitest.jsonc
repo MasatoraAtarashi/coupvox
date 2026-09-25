@@ -1,0 +1,21 @@
+/**
+ * テスト用の wrangler 設定（vitest-pool-workers が読む）。
+ * 本番の wrangler.jsonc とバインディング構成を揃えること。
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coupvox-test",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./test/worker.ts",
+  "observability": {
+    "enabled": false,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "test-db",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+}

@@ -1,0 +1,85 @@
+{
+  "context_servers": {
+    "cloudflare-docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp"
+    },
+    "cloudflare-observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp"
+    }
+  },
+  "agent": {
+    "tool_permissions": {
+      "tools": {
+        "terminal": {
+          "default": "confirm",
+          "always_allow": [
+            {
+              "pattern": "git status",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "git diff",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "git log",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "git branch",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "pnpm run *",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "pnpm test",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "pnpm typecheck",
+              "case_sensitive": false
+            }
+          ],
+          "always_deny": [
+            {
+              "pattern": "rm -rf *",
+              "case_sensitive": false
+            }
+          ],
+          "always_confirm": [
+            {
+              "pattern": "git push --force*",
+              "case_sensitive": false
+            }
+          ]
+        },
+        "edit_file": {
+          "always_allow": [
+            {
+              "pattern": "src/**",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "app/**",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "server/**",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "db/**",
+              "case_sensitive": false
+            },
+            {
+              "pattern": "test/**",
+              "case_sensitive": false
+            }
+          ]
+        }
+      }
+    }
+  }
+}

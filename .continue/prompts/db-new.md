@@ -1,0 +1,13 @@
+---
+name: db-new
+description: D1 スキーマ変更からマイグレーション生成・適用までを一括で行う
+invokable: true
+---
+D1 のスキーマ変更を安全に反映してください。
+
+1. `db/schema.ts` に要求された変更を適用する
+2. `pnpm db:generate`（drizzle-kit generate）で SQL マイグレーションを生成する
+3. 生成された `migrations/*.sql` の内容（破壊的変更の有無）を確認し、問題があれば報告する
+4. `pnpm db:migrate:local` でローカル D1 に適用する
+5. テスト（`pnpm test`）を通してリグレッションがないことを確認する
+6. リモートへの適用が必要と判断した場合のみ `pnpm db:migrate:remote` を実行する（本番データに影響する場合は必ず先に確認する）

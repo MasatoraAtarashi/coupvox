@@ -1,0 +1,28 @@
+# lefthook.yml — squat 共通ハーネス（harness/security から各テンプレート・ルートへ配布）
+# 設計原則（kawasemi 由来）: pre-commit には軽量チェックのみ。重いチェックは CI へ。
+
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks:
+      run: gitleaks protect --staged -v --redact
+    prettier:
+      glob: "*.{md,json,jsonc,yaml,yml,css,ts,tsx,js,jsx}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    zizmor:
+      glob: ".github/**/*.{yml,yaml}"
+      run: mise x -- zizmor --quiet {staged_files}
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    test:
+      run: pnpm test

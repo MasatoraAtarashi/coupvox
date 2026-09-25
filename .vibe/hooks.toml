@@ -1,0 +1,5 @@
+[[hooks]]
+name = "pre_tool-0"
+type = "pre_tool"
+command = ".rulesync/hooks/security-guard.sh"
+match = "Bash"

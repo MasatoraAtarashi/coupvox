@@ -1,0 +1,31 @@
+toolPermissions:
+  bash:
+    default: ask
+    commands:
+      - command: git status
+        permission: allow
+      - command: git diff
+        permission: allow
+      - command: git log
+        permission: allow
+      - command: git branch
+        permission: allow
+      - command: pnpm run *
+        permission: allow
+      - command: pnpm test
+        permission: allow
+      - command: pnpm typecheck
+        permission: allow
+      - command: rm -rf *
+        permission: deny
+      - command: git push --force*
+        permission: ask
+  allowedExternalPaths:
+    - '!.dev.vars.example'
+    - app/**
+    - db/**
+    - server/**
+    - src/**
+    - test/**
+mcp:
+  mcpConfigPath: .rovodev/mcp.json

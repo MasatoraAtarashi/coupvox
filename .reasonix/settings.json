@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "command": ".rulesync/hooks/security-guard.sh",
+        "match": "Bash"
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+mcp_servers:
+  cloudflare-docs:
+    transport:
+      type: http
+      url: https://docs.mcp.cloudflare.com/mcp
+  cloudflare-observability:
+    transport:
+      type: http
+      url: https://observability.mcp.cloudflare.com/mcp
+hooks:
+  PreToolUse:
+    - matcher: Bash
+      command: .rulesync/hooks/security-guard.sh
+tools:
+  shell:
+    deny:
+      - rm -rf *
+paths:
+  allow:
+    - path: '!.dev.vars.example'
+    - path: src/**
+      write: true
+    - path: app/**
+      write: true
+    - path: server/**
+      write: true
+    - path: db/**
+      write: true
+    - path: test/**
+      write: true
+  deny:
+    - path: .env
+    - path: .env.*
+    - path: .dev.vars

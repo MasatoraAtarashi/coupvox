@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(!.dev.vars.example)",
+      "Shell(git branch)",
+      "Shell(git diff)",
+      "Shell(git log)",
+      "Shell(git status)",
+      "Shell(pnpm run *)",
+      "Shell(pnpm test)",
+      "Shell(pnpm typecheck)",
+      "Write(app/**)",
+      "Write(db/**)",
+      "Write(server/**)",
+      "Write(src/**)",
+      "Write(test/**)"
+    ],
+    "deny": [
+      "Read(.dev.vars)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Shell(rm -rf *)"
+    ]
+  }
+}

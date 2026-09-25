@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "command(git branch)",
+      "command(git diff)",
+      "command(git log)",
+      "command(git status)",
+      "command(pnpm run *)",
+      "command(pnpm test)",
+      "command(pnpm typecheck)",
+      "read_file(!.dev.vars.example)",
+      "write_file(app/**)",
+      "write_file(db/**)",
+      "write_file(server/**)",
+      "write_file(src/**)",
+      "write_file(test/**)"
+    ],
+    "ask": [
+      "command",
+      "command(git push --force*)"
+    ],
+    "deny": [
+      "command(rm -rf *)",
+      "read_file(.dev.vars)",
+      "read_file(.env)",
+      "read_file(.env.*)"
+    ]
+  }
+}

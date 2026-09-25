@@ -1,0 +1,12 @@
+[mcp_servers.cloudflare-docs]
+type = "http"
+url = "https://docs.mcp.cloudflare.com/mcp"
+
+[mcp_servers.cloudflare-observability]
+type = "http"
+url = "https://observability.mcp.cloudflare.com/mcp"
+
+[permission]
+allow = [ "Bash(git branch)", "Bash(git diff)", "Bash(git log)", "Bash(git status)", "Bash(pnpm run *)", "Bash(pnpm test)", "Bash(pnpm typecheck)", "Edit(app/**)", "Edit(db/**)", "Edit(server/**)", "Edit(src/**)", "Edit(test/**)", "Read(!.dev.vars.example)" ]
+deny = [ "Bash(rm -rf *)", "Read(.dev.vars)", "Read(.env)", "Read(.env.*)" ]
+ask = [ "Bash", "Bash(git push --force*)" ]

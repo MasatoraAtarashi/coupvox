@@ -1,0 +1,7 @@
+workflow_mcp_servers:
+  stdio: false
+  sse: false
+  http: true
+provider_profiles:
+  claude:
+    default_permission_mode: readonly

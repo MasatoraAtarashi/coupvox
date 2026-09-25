@@ -1,0 +1,8 @@
+title = "squat gitleaks config"
+
+# lockfile はハッシュ値が secret と誤検知されやすいので除外
+[allowlist]
+paths = [
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)package-lock\.json$''',
+]
