@@ -34,7 +34,7 @@
   },
   "vars": {
     // 個人リンクを組み立てるときの公開 URL。デプロイ後の Workers URL / 独自ドメインに置き換える
-    "APP_URL": "http://localhost:5173",
+    "APP_URL": "https://coupvox.kaito-technology.workers.dev",
   },
   /**
    * secret（`wrangler secret put <NAME>`、ローカルは .dev.vars）:
