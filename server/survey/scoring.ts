@@ -50,3 +50,67 @@ export function lowestItems(values: Record<string, number>, limit = 3): LowItem[
     .slice(0, limit)
     .map(({ id, text, score }) => ({ id, text, score }));
 }
+
+export interface GapItem {
+  id: string;
+  text: string;
+  /** 自分がこの項目で相手を評定した点 */
+  mine: number;
+  /** 相手が同じ項目で自分を評定した点 */
+  theirs: number;
+  diff: number;
+}
+
+/**
+ * 同じ項目に対する「自分が相手に感じたこと」と「相手が自分に感じたこと」の差。
+ *
+ * 16 項目はどれも「私のパートナーは〜」と相手を評定する形なので、同じ項目でも
+ * 二人の回答は評定の向きが逆になる。差が大きい項目は「片方は満たされていると
+ * 感じ、もう片方はそう感じていない」という非対称が起きている場所で、そこが
+ * 対話の糸口になる。どちらが正しいかではなく、見え方が違うことを示す指標。
+ */
+export function itemGaps(
+  mineValues: Record<string, number>,
+  theirsValues: Record<string, number>,
+  limit = 3,
+): GapItem[] {
+  return SURVEY_ITEMS.filter(
+    (item) => typeof mineValues[item.id] === "number" && typeof theirsValues[item.id] === "number",
+  )
+    .map((item) => {
+      const mine = mineValues[item.id];
+      const theirs = theirsValues[item.id];
+      return { id: item.id, text: item.text, mine, theirs, diff: Math.abs(mine - theirs) };
+    })
+    .filter((gap) => gap.diff > 0)
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, limit);
+}
+
+export interface ItemDelta {
+  id: string;
+  text: string;
+  from: number;
+  to: number;
+}
+
+/** 前回からの動きが大きかった項目。±1 は揺らぎとして捨て、2 以上だけを変化として扱う */
+export function itemDeltas(
+  previousValues: Record<string, number>,
+  currentValues: Record<string, number>,
+  limit = 3,
+): ItemDelta[] {
+  return SURVEY_ITEMS.filter(
+    (item) =>
+      typeof previousValues[item.id] === "number" && typeof currentValues[item.id] === "number",
+  )
+    .map((item) => ({
+      id: item.id,
+      text: item.text,
+      from: previousValues[item.id],
+      to: currentValues[item.id],
+    }))
+    .filter((delta) => Math.abs(delta.to - delta.from) >= 2)
+    .sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from))
+    .slice(0, limit);
+}
